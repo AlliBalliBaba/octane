@@ -12,6 +12,5 @@ class GiveNewRequestInstanceToApplication
     public function handle($event): void
     {
         $event->app->instance('request', $event->request);
-        $event->sandbox->instance('request', $event->request);
     }
 }

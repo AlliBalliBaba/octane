@@ -31,7 +31,6 @@ class FakeWorker extends Worker
 
     public function setApplicationSnapshot(ApplicationSnapshot $snapshot): void
     {
-        $this->createApplicationSnapshot();
         $this->applicationSnapshot = $snapshot;
     }
 }
