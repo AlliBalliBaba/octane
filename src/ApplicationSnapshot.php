@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Facade;
 
 class ApplicationSnapshot extends Application
 {
-
     public static function createSnapshotFrom(Application $app): ApplicationSnapshot
     {
         $previousInstance = Container::getInstance();
@@ -17,6 +16,7 @@ class ApplicationSnapshot extends Application
             $snapshot->$key = $value;
         }
         Container::setInstance($previousInstance);
+
         return $snapshot;
     }
 
@@ -27,5 +27,4 @@ class ApplicationSnapshot extends Application
         }
         Facade::clearResolvedInstances();
     }
-
 }
