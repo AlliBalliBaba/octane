@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class BindingStateTest extends TestCase
 {
-    public function test_container_instances_given_to_dependencies_can_be_stale_if_an_old_instance_is_given()
+    public function test_container_instances_given_to_dependencies_will_always_be_fresh()
     {
         [$app, $worker, $client] = $this->createOctaneContext([
             Request::create('/first', 'GET'),
@@ -24,65 +24,19 @@ class BindingStateTest extends TestCase
 
         $worker->run();
 
-        $this->assertNotEquals(
-            $client->responses[0]->original['app'],
-            $client->responses[0]->original['state']
-        );
-    }
-
-    public function test_container_instances_given_to_dependencies_will_be_fresh_if_injected_container_is_used()
-    {
-        [$app, $worker, $client] = $this->createOctaneContext([
-            Request::create('/first', 'GET'),
-        ]);
-
-        $app->bind(GenericObject::class, fn ($app) => new GenericObject($app));
-
-        $app['router']->get('/first', function (Application $app) {
-            return [
-                'app' => spl_object_hash($app),
-                'state' => spl_object_hash($app->make(GenericObject::class)->state),
-            ];
-        });
-
-        $worker->run();
-
         $this->assertEquals(
             $client->responses[0]->original['app'],
             $client->responses[0]->original['state']
         );
     }
 
-    public function test_container_instances_given_to_dependencies_will_be_fresh_if_singleton_but_not_resolved_before_boot()
+    public function test_container_instances_given_to_dependencies_will_be_fresh_if_singleton_and_resolved_during_boot()
     {
         [$app, $worker, $client] = $this->createOctaneContext([
             Request::create('/first', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn ($app) => new GenericObject($app));
-
-        $app['router']->get('/first', function (Application $app) {
-            return [
-                'app' => spl_object_hash($app),
-                'state' => spl_object_hash($app->make(GenericObject::class)->state),
-            ];
-        });
-
-        $worker->run();
-
-        $this->assertEquals(
-            $client->responses[0]->original['app'],
-            $client->responses[0]->original['state']
-        );
-    }
-
-    public function test_container_instances_given_to_dependencies_will_be_stale_if_singleton_and_resolved_during_boot()
-    {
-        [$app, $worker, $client] = $this->createOctaneContext([
-            Request::create('/first', 'GET'),
-        ]);
-
-        $app->singleton(GenericObject::class, fn ($app) => new GenericObject($app));
+        $app->singleton(GenericObject::class, fn($app) => new GenericObject($app));
 
         $app->make(GenericObject::class);
 
@@ -95,7 +49,7 @@ class BindingStateTest extends TestCase
 
         $worker->run();
 
-        $this->assertNotEquals(
+        $this->assertEquals(
             $client->responses[0]->original['app'],
             $client->responses[0]->original['state']
         );
@@ -108,7 +62,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->bind(GenericObject::class, fn () => new GenericObject($app['request']));
+        $app->bind(GenericObject::class, fn() => new GenericObject($app['request']));
 
         $app['router']->get('/first', function (Application $app) {
             return $app->make(GenericObject::class)->state->query('name');
@@ -127,7 +81,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn () => new GenericObject($app['request']));
+        $app->singleton(GenericObject::class, fn() => new GenericObject($app['request']));
 
         $app['router']->get('/first', function (Application $app) {
             return $app->make(GenericObject::class)->state->query('name');
@@ -146,7 +100,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn () => new GenericObject($app['request']));
+        $app->singleton(GenericObject::class, fn() => new GenericObject($app['request']));
 
         $app->make(GenericObject::class);
 
@@ -158,6 +112,27 @@ class BindingStateTest extends TestCase
 
         $this->assertNull($client->responses[0]->original);
         $this->assertNull($client->responses[1]->original);
+    }
+
+    public function test_container_variables_set_with_array_access_will_be_reset_across_requests()
+    {
+        [$app, $worker, $client] = $this->createOctaneContext([
+            Request::create('/first', 'GET'),
+            Request::create('/second', 'GET'),
+        ]);
+        $app['parameter'] = 'Abigail';
+        $app['router']->get('/first', function (Application $app) {
+            $app['parameter'] = 'Taylor';
+            return $app['parameter'];
+        });
+        $app['router']->get('/second', function (Application $app) {
+            return $app['parameter'];
+        });
+
+        $worker->run();
+
+        $this->assertEquals('Taylor', $client->responses[0]->original);
+        $this->assertEquals('Abigail', $client->responses[1]->original);
     }
 }
 

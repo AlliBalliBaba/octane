@@ -2,6 +2,7 @@
 
 namespace Laravel\Octane\Testing\Fakes;
 
+use Laravel\Octane\ApplicationSnapshot;
 use Laravel\Octane\RequestContext;
 use Laravel\Octane\Worker;
 
@@ -26,5 +27,11 @@ class FakeWorker extends Worker
     public function runTicks()
     {
         return collect($this->client->requests)->map(fn () => $this->handleTick())->all();
+    }
+
+    public function setApplicationSnapshot(ApplicationSnapshot $snapshot): void
+    {
+        $this->createApplicationSnapshot();
+        $this->applicationSnapshot = $snapshot;
     }
 }

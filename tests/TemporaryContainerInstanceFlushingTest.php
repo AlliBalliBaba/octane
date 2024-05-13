@@ -21,8 +21,6 @@ class TemporaryContainerInstanceFlushingTest extends TestCase
             return Str::random(10);
         });
 
-        $app['random-string'];
-
         $app['router']->get('/first', function (Application $app) {
             return $app['random-string'];
         });
