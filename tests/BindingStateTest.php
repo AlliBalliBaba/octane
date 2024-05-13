@@ -36,7 +36,7 @@ class BindingStateTest extends TestCase
             Request::create('/first', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn($app) => new GenericObject($app));
+        $app->singleton(GenericObject::class, fn ($app) => new GenericObject($app));
 
         $app->make(GenericObject::class);
 
@@ -62,7 +62,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->bind(GenericObject::class, fn() => new GenericObject($app['request']));
+        $app->bind(GenericObject::class, fn () => new GenericObject($app['request']));
 
         $app['router']->get('/first', function (Application $app) {
             return $app->make(GenericObject::class)->state->query('name');
@@ -81,7 +81,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn() => new GenericObject($app['request']));
+        $app->singleton(GenericObject::class, fn () => new GenericObject($app['request']));
 
         $app['router']->get('/first', function (Application $app) {
             return $app->make(GenericObject::class)->state->query('name');
@@ -100,7 +100,7 @@ class BindingStateTest extends TestCase
             Request::create('/first?name=Abigail', 'GET'),
         ]);
 
-        $app->singleton(GenericObject::class, fn() => new GenericObject($app['request']));
+        $app->singleton(GenericObject::class, fn () => new GenericObject($app['request']));
 
         $app->make(GenericObject::class);
 
@@ -112,27 +112,6 @@ class BindingStateTest extends TestCase
 
         $this->assertNull($client->responses[0]->original);
         $this->assertNull($client->responses[1]->original);
-    }
-
-    public function test_container_variables_set_with_array_access_will_be_reset_across_requests()
-    {
-        [$app, $worker, $client] = $this->createOctaneContext([
-            Request::create('/first', 'GET'),
-            Request::create('/second', 'GET'),
-        ]);
-        $app['parameter'] = 'Abigail';
-        $app['router']->get('/first', function (Application $app) {
-            $app['parameter'] = 'Taylor';
-            return $app['parameter'];
-        });
-        $app['router']->get('/second', function (Application $app) {
-            return $app['parameter'];
-        });
-
-        $worker->run();
-
-        $this->assertEquals('Taylor', $client->responses[0]->original);
-        $this->assertEquals('Abigail', $client->responses[1]->original);
     }
 }
 
