@@ -27,16 +27,24 @@ class Worker implements WorkerContract
     protected $requestHandledCallbacks = [];
 
     /**
-     * The root application instance.
+     * The current application instance.
      *
-     * @var \Illuminate\Foundation\Application
+     * @var Application
      */
     protected $app;
 
+    /**
+     * A clone of the warmed up initial application
+     *
+     * @var ApplicationSnapshot
+     */
+    protected $applicationSnapshot;
+
     public function __construct(
         protected ApplicationFactory $appFactory,
-        protected Client $client
-    ) {
+        protected Client             $client
+    )
+    {
     }
 
     /**
@@ -72,9 +80,9 @@ class Worker implements WorkerContract
         // We will clone the application instance so that we have a clean copy to switch
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
-        CurrentApplication::set($sandbox = clone $this->app);
+        $this->createApplicationSnapshot();
 
-        $gateway = new ApplicationGateway($this->app, $sandbox);
+        $gateway = new ApplicationGateway($this->app, $this->app);
 
         try {
             $responded = false;
@@ -97,30 +105,23 @@ class Worker implements WorkerContract
 
             $responded = true;
 
-            $this->invokeRequestHandledCallbacks($request, $response, $sandbox);
+            $this->invokeRequestHandledCallbacks($request, $response, $this->app);
 
             $gateway->terminate($request, $response);
         } catch (Throwable $e) {
-            $this->handleWorkerError($e, $sandbox, $request, $context, $responded);
+            $this->handleWorkerError($e, $this->app, $request, $context, $responded);
         } finally {
-            $sandbox->flush();
-
-            $this->app->make('view.engine.resolver')->forget('blade');
-            $this->app->make('view.engine.resolver')->forget('php');
-
             // After the request handling process has completed we will unset some variables
             // plus reset the current application state back to its original state before
             // it was cloned. Then we will be ready for the next worker iteration loop.
-            unset($gateway, $sandbox, $request, $response, $octaneResponse, $output);
-
-            CurrentApplication::set($this->app);
+            unset($gateway, $request, $response, $octaneResponse, $output);
         }
     }
 
     /**
      * Handle an incoming task.
      *
-     * @param  mixed  $data
+     * @param mixed $data
      * @return mixed
      */
     public function handleTask($data)
@@ -130,27 +131,20 @@ class Worker implements WorkerContract
         // We will clone the application instance so that we have a clean copy to switch
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
-        CurrentApplication::set($sandbox = clone $this->app);
+        $this->createApplicationSnapshot();
 
         try {
-            $this->dispatchEvent($sandbox, new TaskReceived($this->app, $sandbox, $data));
+            $this->dispatchEvent($this->app, new TaskReceived($this->app, $this->app, $data));
 
             $result = $data();
 
-            $this->dispatchEvent($sandbox, new TaskTerminated($this->app, $sandbox, $data, $result));
+            $this->dispatchEvent($this->app, new TaskTerminated($this->app, $this->app, $data, $result));
         } catch (Throwable $e) {
-            $this->dispatchEvent($sandbox, new WorkerErrorOccurred($e, $sandbox));
+            $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
 
             return TaskExceptionResult::from($e);
         } finally {
-            $sandbox->flush();
-
-            // After the request handling process has completed we will unset some variables
-            // plus reset the current application state back to its original state before
-            // it was cloned. Then we will be ready for the next worker iteration loop.
-            unset($sandbox);
-
-            CurrentApplication::set($this->app);
+            $this->app->flush();
         }
 
         return new TaskResult($result);
@@ -161,19 +155,15 @@ class Worker implements WorkerContract
      */
     public function handleTick(): void
     {
-        CurrentApplication::set($sandbox = clone $this->app);
+        $this->createApplicationSnapshot();
 
         try {
-            $this->dispatchEvent($sandbox, new TickReceived($this->app, $sandbox));
-            $this->dispatchEvent($sandbox, new TickTerminated($this->app, $sandbox));
+            $this->dispatchEvent($this->app, new TickReceived($this->app, $this->app));
+            $this->dispatchEvent($this->app, new TickTerminated($this->app, $this->app));
         } catch (Throwable $e) {
-            $this->dispatchEvent($sandbox, new WorkerErrorOccurred($e, $sandbox));
+            $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
         } finally {
-            $sandbox->flush();
-
-            unset($sandbox);
-
-            CurrentApplication::set($this->app);
+            $this->app->flush();
         }
     }
 
@@ -181,13 +171,14 @@ class Worker implements WorkerContract
      * Handle an uncaught exception from the worker.
      */
     protected function handleWorkerError(
-        Throwable $e,
-        Application $app,
-        Request $request,
+        Throwable      $e,
+        Application    $app,
+        Request        $request,
         RequestContext $context,
-        bool $hasResponded
-    ): void {
-        if (! $hasResponded) {
+        bool           $hasResponded
+    ): void
+    {
+        if (!$hasResponded) {
             $this->client->error($e, $app, $request, $context);
         }
 
@@ -197,9 +188,9 @@ class Worker implements WorkerContract
     /**
      * Invoke the request handled callbacks.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Symfony\Component\HttpFoundation\Response  $response
-     * @param  \Illuminate\Foundation\Application  $sandbox
+     * @param \Illuminate\Http\Request $request
+     * @param \Symfony\Component\HttpFoundation\Response $response
+     * @param \Illuminate\Foundation\Application $sandbox
      */
     protected function invokeRequestHandledCallbacks($request, $response, $sandbox): void
     {
@@ -225,7 +216,7 @@ class Worker implements WorkerContract
      */
     public function application(): Application
     {
-        if (! $this->app) {
+        if (!$this->app) {
             throw new RuntimeException('Worker has not booted. Unable to access application.');
         }
 
@@ -238,5 +229,13 @@ class Worker implements WorkerContract
     public function terminate(): void
     {
         $this->dispatchEvent($this->app, new WorkerStopping($this->app));
+    }
+
+    protected function createApplicationSnapshot(): void
+    {
+        if (!isset($this->applicationSnapshot)) {
+            $this->applicationSnapshot = ApplicationSnapshot::createSnapshotFrom($this->app);
+        }
+        $this->applicationSnapshot->loadSnapshotInto($this->app);
     }
 }
