@@ -120,7 +120,7 @@ class Worker implements WorkerContract
     /**
      * Handle an incoming task.
      *
-     * @param  mixed $data
+     * @param  mixed  $data
      * @return mixed
      */
     public function handleTask($data)
