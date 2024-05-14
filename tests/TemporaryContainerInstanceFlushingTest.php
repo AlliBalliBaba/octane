@@ -21,6 +21,28 @@ class TemporaryContainerInstanceFlushingTest extends TestCase
             return Str::random(10);
         });
 
+        $app['random-string'];
+
+        $app['router']->get('/first', function (Application $app) {
+            return $app['random-string'];
+        });
+
+        $worker->run();
+
+        $this->assertNotEquals(
+            $client->responses[0]->original,
+            $client->responses[1]->original
+        );
+    }
+
+    public function test_scoped_container_instances_should_be_flushed()
+    {
+        [$app, $worker, $client] = $this->createOctaneContext([
+            Request::create('/first', 'GET'),
+            Request::create('/first', 'GET'),
+        ]);
+        $app->scoped('random-string', fn() => Str::random(10));
+        $app['random-string'];
         $app['router']->get('/first', function (Application $app) {
             return $app['random-string'];
         });
