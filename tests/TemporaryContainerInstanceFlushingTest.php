@@ -42,7 +42,7 @@ class TemporaryContainerInstanceFlushingTest extends TestCase
             Request::create('/first', 'GET'),
         ]);
 
-        $app->scoped('random-string', fn() => Str::random(10));
+        $app->scoped('random-string', fn () => Str::random(10));
 
         $app['random-string'];
 
