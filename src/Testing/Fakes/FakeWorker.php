@@ -29,8 +29,8 @@ class FakeWorker extends Worker
         return collect($this->client->requests)->map(fn () => $this->handleTick())->all();
     }
 
-    public function setApplicationSnapshot(ApplicationSnapshot $snapshot): void
+    public function setAppSnapshot(ApplicationSnapshot $snapshot): void
     {
-        $this->applicationSnapshot = $snapshot;
+        $this->appSnapshot = $snapshot;
     }
 }

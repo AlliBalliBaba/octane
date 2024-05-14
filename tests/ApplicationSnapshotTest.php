@@ -74,7 +74,7 @@ class ApplicationSnapshotTest extends TestCase
         $this->assertSame('initial/path', $application->basePath());
     }
 
-    public function test_the_snapshot_should_be_reloaded_twice_on_2_consecutive_requests()
+    public function test_the_snapshot_is_loaded_twice_into_the_application_2_consecutive_requests()
     {
         [$app, $worker, $client] = $this->createOctaneContext([
             Request::create('/some-route', 'GET'),
@@ -82,7 +82,7 @@ class ApplicationSnapshotTest extends TestCase
         ]);
         $snapShotMock = $this->createMock(ApplicationSnapshot::class);
         $snapShotMock->expects($spy = $this->any())->method('loadSnapshotInto')->with($app);
-        $worker->setApplicationSnapshot($snapShotMock);
+        $worker->setAppSnapshot($snapShotMock);
         $app['router']->get('/first', fn () => 'Hello World');
 
         $worker->run();
