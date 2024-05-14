@@ -38,7 +38,7 @@ class Worker implements WorkerContract
      *
      * @var ApplicationSnapshot
      */
-    protected $applicationSnapshot;
+    protected $appSnapshot;
 
     public function __construct(
         protected ApplicationFactory $appFactory,
@@ -79,9 +79,9 @@ class Worker implements WorkerContract
         // We will clone the application instance so that we have a clean copy to switch
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
-        $this->createApplicationSnapshot();
+        $this->createAppSnapshot();
 
-        $gateway = new ApplicationGateway($this->app, $this->app);
+        $gateway = new ApplicationGateway($this->appSnapshot, $this->app);
 
         try {
             $responded = false;
@@ -130,14 +130,14 @@ class Worker implements WorkerContract
         // We will clone the application instance so that we have a clean copy to switch
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
-        $this->createApplicationSnapshot();
+        $this->createAppSnapshot();
 
         try {
-            $this->dispatchEvent($this->app, new TaskReceived($this->app, $this->app, $data));
+            $this->dispatchEvent($this->app, new TaskReceived($this->appSnapshot, $this->app, $data));
 
             $result = $data();
 
-            $this->dispatchEvent($this->app, new TaskTerminated($this->app, $this->app, $data, $result));
+            $this->dispatchEvent($this->app, new TaskTerminated($this->appSnapshot, $this->app, $data, $result));
         } catch (Throwable $e) {
             $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
 
@@ -154,11 +154,11 @@ class Worker implements WorkerContract
      */
     public function handleTick(): void
     {
-        $this->createApplicationSnapshot();
+        $this->createAppSnapshot();
 
         try {
-            $this->dispatchEvent($this->app, new TickReceived($this->app, $this->app));
-            $this->dispatchEvent($this->app, new TickTerminated($this->app, $this->app));
+            $this->dispatchEvent($this->app, new TickReceived($this->appSnapshot, $this->app));
+            $this->dispatchEvent($this->app, new TickTerminated($this->appSnapshot, $this->app));
         } catch (Throwable $e) {
             $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
         } finally {
@@ -229,11 +229,11 @@ class Worker implements WorkerContract
         $this->dispatchEvent($this->app, new WorkerStopping($this->app));
     }
 
-    protected function createApplicationSnapshot(): void
+    protected function createAppSnapshot(): void
     {
-        if (! isset($this->applicationSnapshot)) {
-            $this->applicationSnapshot = ApplicationSnapshot::createSnapshotFrom($this->app);
+        if (! isset($this->appSnapshot)) {
+            $this->appSnapshot = ApplicationSnapshot::createSnapshotFrom($this->app);
         }
-        $this->applicationSnapshot->loadSnapshotInto($this->app);
+        $this->appSnapshot->loadSnapshotInto($this->app);
     }
 }
