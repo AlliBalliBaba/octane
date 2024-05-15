@@ -19,7 +19,7 @@ class GiveNewApplicationInstanceToNotificationChannelManagerTest extends TestCas
         $channelManager = $app->make(ChannelManager::class);
         $channelManager->driver();
         $initialDriverCount = count($channelManager->getDrivers());
-        $app['router']->get('/first', fn() => 'Hello World');
+        $app['router']->get('/first', fn () => 'Hello World');
 
         $worker->run();
 
