@@ -7,7 +7,6 @@ use Illuminate\Notifications\ChannelManager;
 use Illuminate\Notifications\NotificationServiceProvider;
 use Laravel\Octane\Tests\TestCase;
 
-
 class GiveNewApplicationInstanceToNotificationChannelManagerTest extends TestCase
 {
     public function test_the_notification_manager_drivers_should_be_flushed_on_request()
