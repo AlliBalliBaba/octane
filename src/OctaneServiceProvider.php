@@ -133,6 +133,7 @@ class OctaneServiceProvider extends ServiceProvider
         $this->app->singleton(Listeners\FlushSessionState::class);
         $this->app->singleton(Listeners\FlushTemporaryContainerInstances::class);
         $this->app->singleton(Listeners\GiveNewApplicationInstanceToMailManager::class);
+        $this->app->singleton(Listeners\GiveNewApplicationInstanceToNotificationChannelManager::class);
         $this->app->singleton(Listeners\GiveNewRequestInstanceToApplication::class);
         $this->app->singleton(Listeners\GiveNewRequestInstanceToPaginator::class);
         $this->app->singleton(Listeners\PrepareInertiaForNextOperation::class);
