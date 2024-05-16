@@ -89,4 +89,21 @@ class ApplicationSnapshotTest extends TestCase
 
         $this->assertSame(2, $spy->numberOfInvocations());
     }
+
+    /**
+     * The ApplicationSnapshot strategy only reliably works if there are no private
+     * properties in the Application and Container classes. If this test breaks
+     * then private properties were added to these classes inside of Laravel
+     */
+    public function test_the_application_container_has_no_private_properties()
+    {
+        $appReflection = new \ReflectionClass(Application::class);
+        $containerReflection = new \ReflectionClass(Container::class);
+
+        $privatePropsInApp = $appReflection->getProperties(\ReflectionProperty::IS_PRIVATE);
+        $privatePropsInContainer = $containerReflection->getProperties(\ReflectionProperty::IS_PRIVATE);
+
+        $this->assertSame(0, count($privatePropsInApp));
+        $this->assertSame(0, count($privatePropsInContainer));
+    }
 }
