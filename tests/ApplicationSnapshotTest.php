@@ -91,9 +91,9 @@ class ApplicationSnapshotTest extends TestCase
     }
 
     /**
-     * The ApplicationSnapshot strategy only reliably works if there are no private
+     * An ApplicationSnapshot strategy only reliably works if there are no private
      * properties in the Application and Container classes. If this test breaks
-     * then private properties were added to these classes inside of Laravel
+     * then private properties were added to these classes inside of Laravel.
      */
     public function test_the_application_container_has_no_private_properties()
     {
