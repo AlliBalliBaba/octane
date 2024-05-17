@@ -2,6 +2,8 @@
 
 namespace Laravel\Octane\Listeners;
 
+use Illuminate\View\ViewServiceProvider;
+
 class GiveNewApplicationInstanceToViewFactory
 {
     /**
@@ -20,5 +22,10 @@ class GiveNewApplicationInstanceToViewFactory
 
             $view->share('app', $event->sandbox);
         });
+
+        $provider = $event->sandbox->getProvider(ViewServiceProvider::class);
+        if($provider && method_exists($provider, 'setApplication')){
+            $provider->setApplication($event->sandbox);
+        }
     }
 }
