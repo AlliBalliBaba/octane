@@ -24,7 +24,7 @@ class GiveNewApplicationInstanceToViewFactory
         });
 
         $provider = $event->sandbox->getProvider(ViewServiceProvider::class);
-        if($provider && method_exists($provider, 'setApplication')){
+        if ($provider && method_exists($provider, 'setApplication')){
             $provider->setApplication($event->sandbox);
         }
     }
