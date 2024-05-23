@@ -76,4 +76,5 @@ try {
     }
 } finally {
     $worker?->terminate();
+    gc_collect_cycles();
 }
