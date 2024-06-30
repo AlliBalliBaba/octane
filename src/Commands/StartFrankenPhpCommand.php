@@ -27,6 +27,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
     public $signature = 'octane:frankenphp
                     {--host=127.0.0.1 : The IP address the server should bind to}
                     {--port= : The port the server should be available on}
+                    {--admin-host=localhost : The host the admin server should be available on}
                     {--admin-port= : The port the admin server should be available on}
                     {--workers=auto : The number of workers that should be available to handle requests}
                     {--max-requests=500 : The number of requests to process before reloading the server}
@@ -64,7 +65,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
         $frankenphpBinary = $this->ensureFrankenPhpBinaryIsInstalled();
 
         if ($inspector->serverIsRunning()) {
-            $this->error('FrankenPHP server is already running.');
+            $this->components->error('FrankenPHP server is already running.');
 
             return 1;
         }
@@ -97,6 +98,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
             'REQUEST_MAX_EXECUTION_TIME' => $this->maxExecutionTime(),
             'CADDY_GLOBAL_OPTIONS' => ($https && $this->option('http-redirect')) ? '' : 'auto_https disable_redirects',
             'CADDY_SERVER_ADMIN_PORT' => $this->adminPort(),
+            'CADDY_SERVER_ADMIN_HOST' => $this->option('admin-host'),
             'CADDY_SERVER_LOG_LEVEL' => $this->option('log-level') ?: (app()->environment('local') ? 'INFO' : 'WARN'),
             'CADDY_SERVER_LOGGER' => 'json',
             'CADDY_SERVER_SERVER_NAME' => $serverName,
@@ -209,6 +211,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
             'appName' => config('app.name', 'Laravel'),
             'host' => $this->getHost(),
             'port' => $this->getPort(),
+            'adminHost' => $this->option('admin-host'),
             'adminPort' => $this->adminPort(),
             'workers' => $this->workerCount(),
             'maxRequests' => $this->option('max-requests'),
@@ -271,7 +274,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
 
         $errorOutput->each(function ($output) {
             if (! is_array($debug = json_decode($output, true))) {
-                return $this->info($output);
+                return $this->components->info($output);
             }
 
             $message = $debug['msg'] ?? 'unknown error';
@@ -309,7 +312,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
 
             if (isset($debug['level'])) {
                 if ($debug['level'] === 'warn') {
-                    return $this->warn($message);
+                    return $this->components->warn($message);
                 }
 
                 if ($debug['level'] !== 'info') {
@@ -318,7 +321,7 @@ class StartFrankenPhpCommand extends Command implements SignalableCommandInterfa
                         return;
                     }
 
-                    return $this->error($message);
+                    return $this->components->error($message);
                 }
             }
         });

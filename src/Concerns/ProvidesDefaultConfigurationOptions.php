@@ -28,6 +28,7 @@ trait ProvidesDefaultConfigurationOptions
     {
         return [
             \Laravel\Octane\Listeners\CreateConfigurationSandbox::class,
+            \Laravel\Octane\Listeners\CreateUrlGeneratorSandbox::class,
             \Laravel\Octane\Listeners\GiveNewApplicationInstanceToMailManager::class,
             \Laravel\Octane\Listeners\GiveNewApplicationInstanceToNotificationChannelManager::class,
             \Laravel\Octane\Listeners\FlushDatabaseRecordModificationState::class,

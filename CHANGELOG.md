@@ -1,6 +1,27 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/octane/compare/v2.3.10...2.x)
+## [Unreleased](https://github.com/laravel/octane/compare/v2.5.0...2.x)
+
+## [v2.5.0](https://github.com/laravel/octane/compare/v2.4.0...v2.5.0) - 2024-06-24
+
+* Refreshes log manager container by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/octane/pull/910
+* Fix inter test dependencies by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/octane/pull/914
+* Add laravel/prompts by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/octane/pull/917
+
+## [v2.4.0](https://github.com/laravel/octane/compare/v2.3.12...v2.4.0) - 2024-05-31
+
+* Add `--admin-host` argument to FrankenPHP Command by [@alextricity25](https://github.com/alextricity25) in https://github.com/laravel/octane/pull/898
+* Give New Application to Routes by [@dbpolito](https://github.com/dbpolito) in https://github.com/laravel/octane/pull/899
+* Reduce sleep between reading server logs to improve performance for heavy-logging Laravel application using a stderr/stdout logging driver. by [@LauJosefsen](https://github.com/LauJosefsen) in https://github.com/laravel/octane/pull/902
+
+## [v2.3.12](https://github.com/laravel/octane/compare/v2.3.11...v2.3.12) - 2024-05-24
+
+* UrlGenerator Sandbox by [@dbpolito](https://github.com/dbpolito) in https://github.com/laravel/octane/pull/896
+* Finishes garbage collection before restarting the FrankenPHP worker process by [@AlliBalliBaba](https://github.com/AlliBalliBaba) in https://github.com/laravel/octane/pull/897
+
+## [v2.3.11](https://github.com/laravel/octane/compare/v2.3.10...v2.3.11) - 2024-05-16
+
+* Fix to stuck in "Application change detected. Restarting workers" with Octane + FrankenPHP + Sail. by [@gazzoy](https://github.com/gazzoy) in https://github.com/laravel/octane/pull/890
 
 ## [v2.3.10](https://github.com/laravel/octane/compare/v2.3.9...v2.3.10) - 2024-05-07
 

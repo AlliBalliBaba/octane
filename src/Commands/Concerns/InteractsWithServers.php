@@ -28,16 +28,20 @@ trait InteractsWithServers
         $watcher = $this->startServerWatcher();
 
         try {
+            $usleepBetweenIterations = config('octane.usleep_between_writing_server_output') ??
+                $_ENV['LARAVEL_OCTANE_USLEEP_BETWEEN_WRITING_SERVER_OUTPUT'] ??
+                10 * 1000;
+
             while ($server->isRunning()) {
                 $this->writeServerOutput($server);
 
                 if ($watcher->isRunning() &&
                     $watcher->getIncrementalOutput()) {
-                    $this->info('Application change detected. Restarting workers…');
+                    $this->components->info('Application change detected. Restarting workers…');
 
                     $inspector->reloadServer();
                 } elseif ($watcher->isTerminated()) {
-                    $this->error(
+                    $this->components->error(
                         'Watcher process has terminated. Please ensure Node and chokidar are installed.'.PHP_EOL.
                         $watcher->getErrorOutput()
                     );
@@ -45,7 +49,7 @@ trait InteractsWithServers
                     return 1;
                 }
 
-                usleep(500 * 1000);
+                usleep($usleepBetweenIterations);
             }
 
             $this->writeServerOutput($server);
@@ -96,7 +100,7 @@ trait InteractsWithServers
      */
     protected function writeServerRunningMessage()
     {
-        $this->info('Server running…');
+        $this->components->info('Server running…');
 
         $this->output->writeln([
             '',
