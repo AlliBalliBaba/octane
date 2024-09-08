@@ -1,6 +1,5 @@
 <?php
 
-use Laravel\Octane\Exceptions\DdException;
 use Laravel\Octane\Octane;
 
 ini_set('display_errors', 'stderr');
@@ -24,13 +23,6 @@ if (! is_string($basePath)) {
     Octane::writeError('Cannot find application base path.');
 
     exit(11);
-}
-
-if (! function_exists('dd')) {
-    function dd(...$vars)
-    {
-        throw new DdException($vars);
-    }
 }
 
 /*
