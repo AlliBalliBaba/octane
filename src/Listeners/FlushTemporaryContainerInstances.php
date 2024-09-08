@@ -19,7 +19,7 @@ class FlushTemporaryContainerInstances
             $event->app->forgetScopedInstances();
         }
 
-        foreach ($event->sandbox->make('config')->get('octane.flush', []) as $binding) {
+        foreach ($event->app->make('config')->get('octane.flush', []) as $binding) {
             $event->app->forgetInstance($binding);
         }
     }

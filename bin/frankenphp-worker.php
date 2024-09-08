@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Laravel\Octane\ApplicationFactory;
 use Laravel\Octane\FrankenPhp\FrankenPhpClient;
 use Laravel\Octane\RequestContext;
@@ -39,16 +40,14 @@ if (PHP_OS_FAMILY === 'Linux' && ! is_null($requestMaxExecutionTime)) {
     set_time_limit((int) $requestMaxExecutionTime);
 }
 
-try {
-    $handleRequest = static function () use (&$worker, $basePath, $frankenPhpClient) {
-        try {
-            $worker ??= tap(
-                new Worker(
-                    new ApplicationFactory($basePath), $frankenPhpClient
-                )
-            )->boot();
+$worker = new Worker(new ApplicationFactory($basePath), $frankenPhpClient);
+$worker->boot();
 
-            [$request, $context] = $frankenPhpClient->marshalRequest(new RequestContext());
+try {
+    $handleRequest = static function () use ($worker, $basePath, $frankenPhpClient) {
+        try {
+            $request = Request::capture();
+            $context = new RequestContext();
 
             $worker->handle($request, $context);
         } catch (Throwable $e) {

@@ -68,6 +68,7 @@ return [
         WorkerStarting::class => [
             EnsureUploadedFilesAreValid::class,
             EnsureUploadedFilesCanBeMoved::class,
+            FlushTemporaryContainerInstances::class,
         ],
 
         RequestReceived::class => [
@@ -104,7 +105,6 @@ return [
 
         OperationTerminated::class => [
             FlushOnce::class,
-            FlushTemporaryContainerInstances::class,
             // DisconnectFromDatabases::class,
             // CollectGarbage::class,
         ],

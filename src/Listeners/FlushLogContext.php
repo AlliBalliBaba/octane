@@ -14,17 +14,18 @@ class FlushLogContext
         if (! $event->sandbox->resolved('log')) {
             return;
         }
+        $log = $event->sandbox['log'];
 
-        if (method_exists($event->sandbox['log'], 'flushSharedContext')) {
-            $event->sandbox['log']->flushSharedContext();
+        if (method_exists($log, 'flushSharedContext')) {
+            $log->flushSharedContext();
         }
 
-        if (method_exists($event->sandbox['log']->driver(), 'withoutContext')) {
-            $event->sandbox['log']->withoutContext();
+        if (method_exists($log->driver(), 'withoutContext')) {
+            $log->driver()->withoutContext();
         }
 
-        if (method_exists($event->sandbox['log'], 'withoutContext')) {
-            $event->sandbox['log']->withoutContext();
+        if (method_exists($log, 'withoutContext')) {
+            $log->withoutContext();
         }
     }
 }

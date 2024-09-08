@@ -17,10 +17,11 @@ class FlushMonologState
             return;
         }
 
-        collect($event->sandbox->make('log')->getChannels())
-            ->map->getLogger()
-            ->filter(function ($logger) {
-                return $logger instanceof ResettableInterface;
-            })->each->reset();
+        foreach ($event->sandbox->make('log')->getChannels() as $channel) {
+            $logger = $channel->getLogger();
+            if($logger instanceof ResettableInterface){
+                $logger->reset();
+            }
+        }
     }
 }

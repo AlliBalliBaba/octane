@@ -23,7 +23,9 @@ class ApplicationSnapshot extends Application
     public function loadSnapshotInto(Application $app): void
     {
         foreach (get_object_vars($this) as $key => $value) {
-            $app->$key = $value;
+            if($this->$key !== $app->$key){
+                $app->$key = $value;
+            }
         }
         Facade::clearResolvedInstances();
     }
