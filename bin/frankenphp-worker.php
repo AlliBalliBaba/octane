@@ -32,7 +32,7 @@ $frankenPhpClient = new FrankenPhpClient();
 
 $worker = null;
 $requestCount = 0;
-$maxRequests = $_ENV['MAX_REQUESTS'] ?? $_SERVER['MAX_REQUESTS'];
+$maxRequests = $_ENV['MAX_REQUESTS'] ?? $_SERVER['MAX_REQUESTS'] ?? 1000;
 $requestMaxExecutionTime = $_ENV['REQUEST_MAX_EXECUTION_TIME'] ?? $_SERVER['REQUEST_MAX_EXECUTION_TIME'] ?? null;
 
 if (PHP_OS_FAMILY === 'Linux' && ! is_null($requestMaxExecutionTime)) {
