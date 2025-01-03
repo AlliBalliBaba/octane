@@ -23,23 +23,33 @@ class EnsureRequestsDontExceedMaxExecutionTime
      */
     public function __invoke()
     {
+        $rows = [];
+
         foreach ($this->timerTable as $workerId => $row) {
             if ((time() - $row['time']) > $this->maxExecutionTime) {
-                $this->timerTable->del($workerId);
+                $rows[$workerId] = $row;
+            }
+        }
 
-                if ($this->server instanceof Server && ! $this->server->exists($row['fd'])) {
-                    continue;
-                }
+        foreach ($rows as $workerId => $row) {
+            if ($this->timerTable->get($workerId, 'fd') !== $row['fd']) {
+                continue;
+            }
 
-                $this->extension->dispatchProcessSignal($row['worker_pid'], SIGKILL);
+            $this->timerTable->del($workerId);
 
-                if ($this->server instanceof Server) {
-                    $response = Response::create($this->server, $row['fd']);
+            if ($this->server instanceof Server && ! $this->server->exists($row['fd'])) {
+                continue;
+            }
 
-                    if ($response) {
-                        $response->status(408);
-                        $response->end();
-                    }
+            $this->extension->dispatchProcessSignal($row['worker_pid'], SIGKILL);
+
+            if ($this->server instanceof Server) {
+                $response = Response::create($this->server, $row['fd']);
+
+                if ($response) {
+                    $response->status(408);
+                    $response->end();
                 }
             }
         }

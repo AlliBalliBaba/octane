@@ -22,7 +22,8 @@ class InstallCommand extends Command
      * @var string
      */
     public $signature = 'octane:install
-                    {--server= : The server that should be used to serve the application}';
+                    {--server= : The server that should be used to serve the application}
+                    {--force : Overwrite any existing configuration files}';
 
     /**
      * The command's description.
@@ -53,7 +54,10 @@ class InstallCommand extends Command
             if ($installed) {
                 $this->updateEnvironmentFile($server);
 
-                $this->callSilent('vendor:publish', ['--tag' => 'octane-config', '--force' => true]);
+                $this->callSilent('vendor:publish', [
+                    '--tag' => 'octane-config',
+                    '--force' => $this->option('force'),
+                ]);
 
                 $this->components->info('Octane installed successfully.');
                 $this->newLine();
@@ -78,6 +82,7 @@ class InstallCommand extends Command
                     PHP_EOL.'OCTANE_SERVER='.$server.PHP_EOL,
                 );
             } else {
+                $this->newLine();
                 $this->components->warn('Please adjust the `OCTANE_SERVER` environment variable.');
             }
         }
@@ -136,7 +141,7 @@ class InstallCommand extends Command
         if (File::exists($gitIgnorePath)) {
             $contents = File::get($gitIgnorePath);
 
-            $filesToAppend = collect(['/caddy', 'frankenphp', 'frankenphp-worker.php'])
+            $filesToAppend = collect(['**/caddy', 'frankenphp', 'frankenphp-worker.php'])
                 ->filter(fn ($file) => ! str_contains($contents, $file.PHP_EOL))
                 ->implode(PHP_EOL);
 

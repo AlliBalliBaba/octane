@@ -1,6 +1,45 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/octane/compare/v2.5.0...2.x)
+## [Unreleased](https://github.com/laravel/octane/compare/v2.5.9...2.x)
+
+## [v2.5.9](https://github.com/laravel/octane/compare/v2.5.8...v2.5.9) - 2024-10-06
+
+* Git ignore the `**/caddy` directories by [@maartenpaauw](https://github.com/maartenpaauw) in https://github.com/laravel/octane/pull/960
+
+## [v2.5.8](https://github.com/laravel/octane/compare/v2.5.7...v2.5.8) - 2024-10-01
+
+* [2.x] Supports Laravel Prompts 0.2 and 0.3 by [@webard](https://github.com/webard) in https://github.com/laravel/octane/pull/956
+
+## [v2.5.7](https://github.com/laravel/octane/compare/v2.5.6...v2.5.7) - 2024-09-27
+
+* Update logo to support dark/light theme by [@milewski](https://github.com/milewski) in https://github.com/laravel/octane/pull/958
+* Fixed host argument to use the getHost() function by [@elomonaco](https://github.com/elomonaco) in https://github.com/laravel/octane/pull/957
+
+## [v2.5.6](https://github.com/laravel/octane/compare/v2.5.5...v2.5.6) - 2024-09-24
+
+* Fix Memory Exhaustion in ConvertSwooleRequestToIlluminateRequest by Cleaning Up Unused Variables by [@jbidad](https://github.com/jbidad) in https://github.com/laravel/octane/pull/953
+
+## [v2.5.5](https://github.com/laravel/octane/compare/v2.5.4...v2.5.5) - 2024-09-11
+
+* Fix: Removes dd() workaround for Frankenphp. by [@AlliBalliBaba](https://github.com/AlliBalliBaba) in https://github.com/laravel/octane/pull/945
+* Add keep-config option to install command by [@MatusBoa](https://github.com/MatusBoa) in https://github.com/laravel/octane/pull/946
+
+## [v2.5.4](https://github.com/laravel/octane/compare/v2.5.3...v2.5.4) - 2024-08-09
+
+* Do not perform deletion operations during traversal by [@hughcube](https://github.com/hughcube) in https://github.com/laravel/octane/pull/941
+
+## [v2.5.3](https://github.com/laravel/octane/compare/v2.5.2...v2.5.3) - 2024-08-05
+
+* fix: RoadRunner streaming through generators by [@danharrin](https://github.com/danharrin) in https://github.com/laravel/octane/pull/939
+
+## [v2.5.2](https://github.com/laravel/octane/compare/v2.5.1...v2.5.2) - 2024-07-08
+
+* Fix buffer error (issue #922) by [@atom1285](https://github.com/atom1285) in https://github.com/laravel/octane/pull/923
+* Add .mjs extension to MIME types by [@luukbox](https://github.com/luukbox) in https://github.com/laravel/octane/pull/924
+
+## [v2.5.1](https://github.com/laravel/octane/compare/v2.5.0...v2.5.1) - 2024-07-01
+
+* [2.x] Swoole `$verbosity` must be of type int, null given. by [@xiCO2k](https://github.com/xiCO2k) in https://github.com/laravel/octane/pull/920
 
 ## [v2.5.0](https://github.com/laravel/octane/compare/v2.4.0...v2.5.0) - 2024-06-24
 

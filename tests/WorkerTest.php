@@ -49,4 +49,25 @@ class WorkerTest extends TestCase
 
         $worker->runTicks();
     }
+
+    /** @test */
+    public function test_worker_doesnt_throw_buffer_error()
+    {
+        [$app, $worker, $client] = $this->createOctaneContext([
+            Request::create('/test'),
+        ]);
+
+        $app['router']->get('/test', function () {
+            while (ob_get_level() !== 0) {
+                ob_end_clean();
+            }
+
+            return 'Test Response';
+        });
+
+        $worker->run();
+
+        $this->assertCount(1, $client->responses);
+        $this->assertEquals('Test Response', $client->responses[0]->getContent());
+    }
 }

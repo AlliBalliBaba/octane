@@ -92,7 +92,9 @@ class Worker implements WorkerContract
 
             $output = ob_get_contents();
 
-            ob_end_clean();
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
 
             // Here we will actually hand the incoming request to the Laravel application so
             // it can generate a response. We'll send this response back to the client so
@@ -113,7 +115,9 @@ class Worker implements WorkerContract
             // After the request handling process has completed we will unset some variables
             // plus reset the current application state back to its original state before
             // it was cloned. Then we will be ready for the next worker iteration loop.
-            unset($gateway, $request, $response, $octaneResponse, $output);
+            unset($gateway, $sandbox, $request, $response, $octaneResponse, $output);
+
+            CurrentApplication::set($this->app);
         }
     }
 

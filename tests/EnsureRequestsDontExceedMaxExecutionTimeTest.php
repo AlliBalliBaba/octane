@@ -17,6 +17,7 @@ class EnsureRequestsDontExceedMaxExecutionTimeTest extends TestCase
         $table['fake-worker-id'] = [
             'worker_pid' => 111,
             'time' => time() - 60,
+            'fd' => 1,
         ];
 
         $action = new EnsureRequestsDontExceedMaxExecutionTime(
@@ -38,5 +39,10 @@ class FakeTimerTable extends ArrayObject
     public function del($workerId)
     {
         $this->deleted[] = $workerId;
+    }
+
+    public function get($workerId, $field = null)
+    {
+        return 1;
     }
 }
