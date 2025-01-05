@@ -22,15 +22,22 @@ use Monolog\ResettableInterface;
 // coming from Application::make() and Container::make().
 class ApplicationResetter
 {
-
     public Kernel $kernel;
+
     private Application $sandbox;
+
     private ApplicationSnapshot $snapshot;
+
     private Repository $config;
+
     private $url;
+
     private $octaneHttps;
+
     private $originalAppLocale;
+
     private $logDefaultDriver = null;
+
     private $arrayCache = null;
 
     public function __construct(ApplicationSnapshot $snapshot, Application $sandbox)
@@ -88,7 +95,6 @@ class ApplicationResetter
         $this->prepareSocialiteForNextOperation();
     }
 
-
     private function flushLocaleState(): void
     {
         // resetting the locale is an expensive operation
@@ -123,7 +129,7 @@ class ApplicationResetter
 
     private function enforceRequestScheme(Request $request): void
     {
-        if (!$this->octaneHttps) {
+        if (! $this->octaneHttps) {
             return;
         }
 
@@ -271,7 +277,7 @@ class ApplicationResetter
     private function prepareSocialiteForNextOperation(): void
     {
         $this->snapshot->resetInitialInstance(Factory::class, function ($socialiteFactory) {
-            if (!method_exists($socialiteFactory, 'forgetDrivers')) {
+            if (! method_exists($socialiteFactory, 'forgetDrivers')) {
                 return;
             }
 
@@ -286,5 +292,4 @@ class ApplicationResetter
             $resolver->forget('php');
         });
     }
-
 }

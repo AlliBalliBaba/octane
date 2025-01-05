@@ -10,7 +10,7 @@ class ApplicationSnapshotTest extends TestCase
 {
     public function test_the_global_container_should_not_be_reset_when_creating_a_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
 
         ApplicationSnapshot::createSnapshotFrom($application);
 
@@ -19,7 +19,7 @@ class ApplicationSnapshotTest extends TestCase
 
     public function test_forget_a_binding_after_reloading_from_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
         $snapshot = ApplicationSnapshot::createSnapshotFrom($application);
         $application->bind('generic', fn () => new GenericObject($application));
 
@@ -30,7 +30,7 @@ class ApplicationSnapshotTest extends TestCase
 
     public function test_forget_a_value_set_from_array_access_after_reloading_from_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
         $snapshot = ApplicationSnapshot::createSnapshotFrom($application);
         $application['key'] = 'value';
 
@@ -41,7 +41,7 @@ class ApplicationSnapshotTest extends TestCase
 
     public function test_forget_a_singleton_after_reloading_from_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
         $snapshot = ApplicationSnapshot::createSnapshotFrom($application);
         $application->singleton(GenericObject::class);
 
@@ -52,7 +52,7 @@ class ApplicationSnapshotTest extends TestCase
 
     public function test_forget_an_instance_after_reloading_from_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
         $snapshot = ApplicationSnapshot::createSnapshotFrom($application);
         $application->instance(GenericObject::class, new GenericObject($application));
 
@@ -63,7 +63,7 @@ class ApplicationSnapshotTest extends TestCase
 
     public function test_reset_the_base_path_after_reloading_from_snapshot()
     {
-        $application = new Application();
+        $application = new Application;
         $application->setBasePath('initial/path');
         $snapshot = ApplicationSnapshot::createSnapshotFrom($application);
         $application->setBasePath('changed/path');

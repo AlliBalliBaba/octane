@@ -45,8 +45,7 @@ class Worker implements WorkerContract
     public function __construct(
         protected ApplicationFactory $appFactory,
         protected Client $client
-    ) {
-    }
+    ) {}
 
     /**
      * Boot / initialize the Octane worker.
