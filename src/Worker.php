@@ -82,7 +82,6 @@ class Worker implements WorkerContract
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
         $this->createAppSnapshot();
-        $this->appResetter = $this->appResetter ?? new ApplicationResetter($this->appSnapshot);
 
         $gateway = new ApplicationGateway($this->appResetter, $this->appSnapshot, $this->app);
 
@@ -238,6 +237,7 @@ class Worker implements WorkerContract
     {
         if (! isset($this->appSnapshot)) {
             $this->appSnapshot = ApplicationSnapshot::createSnapshotFrom($this->app);
+            $this->appResetter = new ApplicationResetter($this->appSnapshot, $this->app);
         }
         $this->appSnapshot->loadSnapshotInto($this->app);
     }

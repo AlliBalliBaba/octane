@@ -4,6 +4,7 @@ namespace Laravel\Octane;
 
 use Carbon\Carbon;
 use Carbon\Laravel\ServiceProvider as CarbonServiceProvider;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
@@ -16,97 +17,46 @@ use Laravel\Socialite\Contracts\Factory;
 use Livewire\LivewireManager;
 use Monolog\ResettableInterface;
 
+// This class resets the application state efficiently between requests.
+// By accessing the initial instances directly we are reducing the overhead
+// coming from Application::make() and Container::make().
 class ApplicationResetter
 {
 
     public Kernel $kernel;
     private Application $sandbox;
-    private \Illuminate\Contracts\Config\Repository $config;
-    private $translator;
-    private $cookies = null;
-    private $db = null;
-    private $session = null;
-    private $url = null;
-
-    private $log = null;
+    private ApplicationSnapshot $snapshot;
+    private Repository $config;
+    private $url;
+    private $octaneHttps;
+    private $originalAppLocale;
     private $logDefaultDriver = null;
-    private $auth = null;
     private $arrayCache = null;
 
-    private $octaneHttps = false;
-    private $mailManager = null;
-    private $channelManager = null;
-
-    private $responseFactory = null;
-    private $livewireManager = null;
-    private $engineManager = null;
-    private $socialiteFactory = null;
-
-    private $originalAppLocale = null;
-
-    public function __construct(Application $sandbox)
+    public function __construct(ApplicationSnapshot $snapshot, Application $sandbox)
     {
         $this->sandbox = $sandbox;
-        $this->config = $sandbox['config'];
-        $this->translator = $sandbox->make('translator');
-        if ($sandbox->resolved('cookie')) {
-            $this->cookies = $sandbox->make('cookie');
-        }
-        if ($sandbox->resolved('db')) {
-            $this->db = $sandbox->make('db');
-        }
-        if ($sandbox->resolved('session')) {
-            $this->session = $sandbox->make('session');
-        }
-        $this->url = $sandbox['url'];
-        if ($this->config->get('cache.stores.array')) {
-            $this->arrayCache = $this->sandbox->make('cache')->store('array');
-        }
-        if ($sandbox->resolved('log')) {
-            $this->log = $sandbox->make('log');
-            $this->logDefaultDriver = $this->log->driver();
-        }
-
-        if ($sandbox->resolved('auth.driver')) {
-            $sandbox->forgetInstance('auth.driver');
-        }
-
-        if ($sandbox->resolved('auth')) {
-            $this->auth = $sandbox->make('auth');
-        }
-
-        if ($this->sandbox->resolved('mail.manager')) {
-            $this->mailManager = $this->sandbox->make('mail.manager');
-        }
-
-        if ($this->sandbox->resolved(ChannelManager::class)) {
-            $this->channelManager = $this->sandbox->make(ChannelManager::class);
-        }
-
+        $this->snapshot = $snapshot;
+        $this->config = $snapshot['config'];
+        $this->url = $snapshot['url'];
         $this->octaneHttps = $this->config->get('octane.https');
+        $this->originalAppLocale = $this->snapshot->getLocale();
+        $this->kernel = $this->snapshot->make(Kernel::class);
 
-        if ($sandbox->resolved(ResponseFactory::class)) {
-            $this->responseFactory = $sandbox->make(ResponseFactory::class);
+        if ($this->config->get('cache.stores.array')) {
+            $this->arrayCache = $this->snapshot->make('cache')->store('array');
         }
 
-        if ($sandbox->resolved(LivewireManager::class)) {
-            $this->livewireManager = $sandbox->make(LivewireManager::class);
+        if ($snapshot->resolved('log')) {
+            $this->logDefaultDriver = $snapshot->make('log')->driver();
         }
 
-        if ($sandbox->resolved(EngineManager::class)) {
-            $this->engineManager = $sandbox->make(EngineManager::class);
+        if ($snapshot->resolved('auth.driver')) {
+            $snapshot->forgetInstance('auth.driver');
         }
-
-        if ($sandbox->resolved(Factory::class)) {
-            $this->socialiteFactory = $sandbox->make(Factory::class);
-        }
-
-        $this->originalAppLocale = $this->sandbox->getLocale();
-
-        $this->kernel = $sandbox->make(Kernel::class);
     }
 
-    public function prepareApplicationForNextRequest(Request $request)
+    public function prepareApplicationForNextRequest(Request $request): void
     {
         $this->flushLocaleState();
         $this->flushCookies();
@@ -117,7 +67,7 @@ class ApplicationResetter
         $this->giveNewRequestInstanceToApplication($request);
     }
 
-    public function prepareApplicationForNextOperation()
+    public function prepareApplicationForNextOperation(): void
     {
         $this->createConfigurationSandbox();
         $this->createUrlGeneratorSandbox();
@@ -140,54 +90,49 @@ class ApplicationResetter
 
     private function flushLocaleState(): void
     {
-        $this->translator->setLocale($this->config->get('app.locale'));
-        $this->translator->setFallback($this->config->get('app.fallback_locale'));
-
         // resetting the locale is an expensive operation
         // only do it if the locale has changed
-        if(Carbon::getLocale() !== $this->originalAppLocale) {
+        if (Carbon::getLocale() !== $this->originalAppLocale) {
             (new CarbonServiceProvider($this->sandbox))->updateLocale();
         }
     }
 
     private function flushCookies()
     {
-        if ($this->cookies !== null) {
-            $this->cookies->flushQueuedCookies();
-        }
+        $this->snapshot->resetInitialInstance('cookie', function ($cookie) {
+            $cookie->flushQueuedCookies();
+        });
     }
 
     private function flushSession(): void
     {
-        if ($this->session === null) {
-            return;
-        }
-
-        $driver = $this->session->driver();
-
-        $driver->flush();
-        $driver->regenerate();
+        $this->snapshot->resetInitialInstance('session', function ($session) {
+            $driver = $session->driver();
+            $driver->flush();
+            $driver->regenerate();
+        });
     }
 
     private function flushAuthenticationState(): void
     {
-        if ($this->auth !== null) {
-            $this->auth->forgetGuards();
-        }
+        $this->snapshot->resetInitialInstance('auth', function ($auth) {
+            $auth->forgetGuards();
+        });
     }
 
-    public function enforceRequestScheme(Request $request): void
+    private function enforceRequestScheme(Request $request): void
     {
         if (!$this->octaneHttps) {
             return;
         }
 
-        $this->url->forceScheme('https');
-
-        $request->server->set('HTTPS', 'on');
+        $this->snapshot->resetInitialInstance('url', function ($url) use ($request) {
+            $url->forceScheme('https');
+            $request->server->set('HTTPS', 'on');
+        });
     }
 
-    public function ensureRequestServerPortMatchesScheme(Request $request): void
+    private function ensureRequestServerPortMatchesScheme(Request $request): void
     {
         $port = $request->getPort();
 
@@ -199,73 +144,69 @@ class ApplicationResetter
         }
     }
 
-    public function giveNewRequestInstanceToApplication(Request $request): void
+    private function giveNewRequestInstanceToApplication(Request $request): void
     {
         $this->sandbox->instance('request', $request);
     }
 
-    private function createConfigurationSandbox()
+    private function createConfigurationSandbox(): void
     {
         $this->sandbox->instance('config', clone $this->config);
     }
 
-    private function createUrlGeneratorSandbox()
+    private function createUrlGeneratorSandbox(): void
     {
         $this->sandbox->instance('url', clone $this->url);
     }
 
     private function giveApplicationInstanceToMailManager(): void
     {
-        if ($this->mailManager !== null) {
-            $this->mailManager->forgetMailers();
-        }
+        $this->snapshot->resetInitialInstance('mail.manager', function ($mailManager) {
+            $mailManager->forgetMailers();
+        });
     }
 
     private function giveApplicationInstanceToNotificationChannelManager(): void
     {
-        if ($this->channelManager !== null) {
-            $this->channelManager->forgetDrivers();
-        }
+        $this->snapshot->resetInitialInstance(ChannelManager::class, function ($channelManager) {
+            $channelManager->forgetDrivers();
+        });
     }
 
     private function flushDatabaseState(): void
     {
-        if ($this->db === null) {
-            return;
-        }
+        $this->snapshot->resetInitialInstance('db', function ($db) {
+            foreach ($db->getConnections() as $connection) {
+                $connection->forgetRecordModificationState();
+                $connection->flushQueryLog();
 
-        foreach ($this->db->getConnections() as $connection) {
-            $connection->forgetRecordModificationState();
-            $connection->flushQueryLog();
-
-            // refresh query duration handling
-            if (
-                method_exists($connection, 'resetTotalQueryDuration')
-                && method_exists($connection, 'allowQueryDurationHandlersToRunAgain')
-            ) {
-                $connection->resetTotalQueryDuration();
-                $connection->allowQueryDurationHandlersToRunAgain();
+                // refresh query duration handling
+                if (
+                    method_exists($connection, 'resetTotalQueryDuration')
+                    && method_exists($connection, 'allowQueryDurationHandlersToRunAgain')
+                ) {
+                    $connection->resetTotalQueryDuration();
+                    $connection->allowQueryDurationHandlersToRunAgain();
+                }
             }
-        }
+        });
     }
 
     private function flushLogContext(): void
     {
-        if ($this->log === null) {
-            return;
-        }
+        $this->snapshot->resetInitialInstance('log', function ($log) {
+            if (method_exists($log, 'flushSharedContext')) {
+                $log->flushSharedContext();
+            }
 
-        if (method_exists($this->log, 'flushSharedContext')) {
-            $this->log->flushSharedContext();
-        }
+            if (method_exists($this->logDefaultDriver, 'withoutContext')) {
+                $this->logDefaultDriver->withoutContext();
+            }
 
-        if (method_exists($this->logDefaultDriver, 'withoutContext')) {
-            $this->logDefaultDriver->withoutContext();
-        }
-
-        if (method_exists($this->log, 'withoutContext')) {
-            $this->log->withoutContext();
-        }
+            if (method_exists($log, 'withoutContext')) {
+                $log->withoutContext();
+            }
+        });
     }
 
     private function flushArrayCache(): void
@@ -277,71 +218,64 @@ class ApplicationResetter
 
     private function flushMonologState(): void
     {
-        if ($this->log === null) {
-            return;
-        }
-
-        foreach ($this->log->getChannels() as $channel) {
-            $logger = $channel->getLogger();
-            if ($logger instanceof ResettableInterface) {
-                $logger->reset();
+        $this->snapshot->resetInitialInstance('log', function ($log) {
+            foreach ($log->getChannels() as $channel) {
+                $logger = $channel->getLogger();
+                if ($logger instanceof ResettableInterface) {
+                    $logger->reset();
+                }
             }
-        }
+        });
     }
 
-    private function flushTranslatorCache()
+    private function flushTranslatorCache(): void
     {
-        if ($this->translator instanceof NamespacedItemResolver) {
-            $this->translator->flushParsedKeys();
-        }
+        $this->snapshot->resetInitialInstance('translator', function ($translator) {
+            $translator->setLocale($this->config->get('app.locale'));
+            $translator->setFallback($this->config->get('app.fallback_locale'));
+
+            if ($translator instanceof NamespacedItemResolver) {
+                $translator->flushParsedKeys();
+            }
+        });
     }
 
     private function prepareInertiaForNextOperation(): void
     {
-        if ($this->responseFactory === null) {
-            return;
-        }
-
-        if (method_exists($this->responseFactory, 'flushShared')) {
-            $this->responseFactory->flushShared();
-        }
+        $this->snapshot->resetInitialInstance(ResponseFactory::class, function ($responseFactory) {
+            if (method_exists($responseFactory, 'flushShared')) {
+                $responseFactory->flushShared();
+            }
+        });
     }
 
     private function prepareLivewireForNextOperation(): void
     {
-        if ($this->livewireManager === null) {
-            return;
-        }
-
-        if (method_exists($this->livewireManager, 'flushState')) {
-            $this->livewireManager->flushState();
-        }
+        $this->snapshot->resetInitialInstance(LivewireManager::class, function ($livewireManager) {
+            if (method_exists($livewireManager, 'flushState')) {
+                $livewireManager->flushState();
+            }
+        });
     }
 
     private function prepareScoutForNextOperation(): void
     {
-        if ($this->engineManager === null) {
-            return;
-        }
-
-        if (!method_exists($this->engineManager, 'forgetEngines')) {
-            return;
-        }
-
-        $this->engineManager->forgetEngines();
+        $this->snapshot->resetInitialInstance(EngineManager::class, function ($engineManager) {
+            if (method_exists($engineManager, 'forgetEngines')) {
+                $engineManager->forgetEngines();
+            }
+        });
     }
 
     private function prepareSocialiteForNextOperation(): void
     {
-        if ($this->socialiteFactory === null) {
-            return;
-        }
+        $this->snapshot->resetInitialInstance(Factory::class, function ($socialiteFactory) {
+            if (!method_exists($socialiteFactory, 'forgetDrivers')) {
+                return;
+            }
 
-        if (!method_exists($this->socialiteFactory, 'forgetDrivers')) {
-            return;
-        }
-
-        $this->socialiteFactory->forgetDrivers();
+            $socialiteFactory->forgetDrivers();
+        });
     }
 
 }

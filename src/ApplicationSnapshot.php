@@ -27,4 +27,12 @@ class ApplicationSnapshot extends Application
         }
         Facade::clearResolvedInstances();
     }
+
+    public function resetInitialInstance(string $abstract, callable $callback): void
+    {
+        if (!array_key_exists($abstract, $this->resolved)) {
+            return;
+        }
+        $callback($this->instances[$abstract]);
+    }
 }

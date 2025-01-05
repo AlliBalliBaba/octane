@@ -122,23 +122,10 @@ class OctaneServiceProvider extends ServiceProvider
     protected function bindListeners()
     {
         $this->app->singleton(Listeners\CollectGarbage::class);
-        $this->app->singleton(Listeners\CreateConfigurationSandbox::class);
         $this->app->singleton(Listeners\DisconnectFromDatabases::class);
-        $this->app->singleton(Listeners\EnforceRequestScheme::class);
-        $this->app->singleton(Listeners\EnsureRequestServerPortMatchesScheme::class);
         $this->app->singleton(Listeners\EnsureUploadedFilesAreValid::class);
         $this->app->singleton(Listeners\EnsureUploadedFilesCanBeMoved::class);
-        $this->app->singleton(Listeners\FlushAuthenticationState::class);
-        $this->app->singleton(Listeners\FlushQueuedCookies::class);
-        $this->app->singleton(Listeners\FlushSessionState::class);
         $this->app->singleton(Listeners\FlushTemporaryContainerInstances::class);
-        $this->app->singleton(Listeners\GiveNewApplicationInstanceToMailManager::class);
-        $this->app->singleton(Listeners\GiveNewApplicationInstanceToNotificationChannelManager::class);
-        $this->app->singleton(Listeners\GiveNewRequestInstanceToApplication::class);
-        $this->app->singleton(Listeners\PrepareInertiaForNextOperation::class);
-        $this->app->singleton(Listeners\PrepareLivewireForNextOperation::class);
-        $this->app->singleton(Listeners\PrepareScoutForNextOperation::class);
-        $this->app->singleton(Listeners\PrepareSocialiteForNextOperation::class);
         $this->app->singleton(Listeners\ReportException::class);
         $this->app->singleton(Listeners\StopWorkerIfNecessary::class);
     }
