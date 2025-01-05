@@ -137,6 +137,7 @@ class Worker implements WorkerContract
         $this->createAppSnapshot();
 
         try {
+            $this->appResetter->prepareApplicationForNextOperation();
             $this->dispatchEvent($this->app, new TaskReceived($this->appSnapshot, $this->app, $data));
 
             $result = $data();
@@ -161,6 +162,7 @@ class Worker implements WorkerContract
         $this->createAppSnapshot();
 
         try {
+            $this->appResetter->prepareApplicationForNextOperation();
             $this->dispatchEvent($this->app, new TickReceived($this->appSnapshot, $this->app));
             $this->dispatchEvent($this->app, new TickTerminated($this->appSnapshot, $this->app));
         } catch (Throwable $e) {

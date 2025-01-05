@@ -13,7 +13,7 @@ class CommandTest extends TestCase
 
         $command->info('foo');
 
-        $this->assertEquals(<<<'EOF'
+        $this->assertStringEqualsStringIgnoringLineEndings(<<<'EOF'
 
    INFO  foo
 
@@ -26,7 +26,7 @@ EOF, $output->fetch());
 
         $command->error('bar');
 
-        $this->assertEquals(<<<'EOF'
+        $this->assertStringEqualsStringIgnoringLineEndings(<<<'EOF'
 
    ERROR  bar
 
@@ -39,7 +39,7 @@ EOF, $output->fetch());
 
         $command->warn('beta period');
 
-        $this->assertEquals(<<<'EOF'
+        $this->assertStringEqualsStringIgnoringLineEndings(<<<'EOF'
 
    WARN  beta period
 
@@ -74,7 +74,7 @@ EOF, $output->fetch());
             'duration' => 4567854,
         ]);
 
-        $this->assertEquals(<<<'EOF'
+        $this->assertStringEqualsStringIgnoringLineEndings(<<<'EOF'
   200    GET /welcome ......... 16.59 mb 10.00 ms
   404    POST / ............. 19.45 mb 1234.00 ms
   500    POST /foofoofo... 28.99 mb 4567854.00 ms
