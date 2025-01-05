@@ -2,7 +2,6 @@
 
 namespace Laravel\Octane\Testing\Fakes;
 
-use Laravel\Octane\ApplicationSnapshot;
 use Laravel\Octane\RequestContext;
 use Laravel\Octane\Worker;
 
@@ -28,5 +27,4 @@ class FakeWorker extends Worker
     {
         return collect($this->client->requests)->map(fn () => $this->handleTick())->all();
     }
-
 }

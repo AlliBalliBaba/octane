@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 
 class ViewEngineTest extends TestCase
 {
-
-
     public function test_forget_blade_view_engine()
     {
         [$app, $worker, $client] = $this->createOctaneContext([
@@ -40,5 +38,4 @@ class ViewEngineTest extends TestCase
 
         $this->assertNotEquals($client->responses[0]->original, $client->responses[1]->original);
     }
-
 }

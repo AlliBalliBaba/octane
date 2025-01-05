@@ -28,7 +28,8 @@ class WorkerTest extends TestCase
         [$app, $worker, $client] = $this->createOctaneContext([
             fn () => 'foo',
             fn () => 'bar',
-            function () {},
+            function () {
+            },
         ]);
 
         $responses = $worker->runTasks();

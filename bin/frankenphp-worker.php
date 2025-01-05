@@ -40,14 +40,16 @@ if (PHP_OS_FAMILY === 'Linux' && ! is_null($requestMaxExecutionTime)) {
     set_time_limit((int) $requestMaxExecutionTime);
 }
 
-$worker = new Worker(new ApplicationFactory($basePath), $frankenPhpClient);
-$worker->boot();
-
 try {
-    $handleRequest = static function () use ($worker, $basePath, $frankenPhpClient) {
+    $handleRequest = static function () use (&$worker, $basePath, $frankenPhpClient) {
         try {
-            $request = Request::capture();
-            $context = new RequestContext();
+            $worker ??= tap(
+                new Worker(
+                    new ApplicationFactory($basePath), $frankenPhpClient
+                )
+            )->boot();
+
+            [$request, $context] = $frankenPhpClient->marshalRequest(new RequestContext());
 
             $worker->handle($request, $context);
         } catch (Throwable $e) {
