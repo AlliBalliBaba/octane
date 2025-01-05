@@ -2,7 +2,6 @@
 
 namespace Laravel\Octane;
 
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -16,7 +15,7 @@ class ApplicationGateway
 {
     use DispatchesEvents;
 
-    public function __construct(protected Application $app, protected Application $sandbox)
+    public function __construct(protected ApplicationResetter $resetter, protected Application $app, protected Application $sandbox)
     {
     }
 
@@ -28,12 +27,14 @@ class ApplicationGateway
         $request->enableHttpMethodParameterOverride();
 
         $this->dispatchEvent($this->sandbox, new RequestReceived($this->app, $this->sandbox, $request));
+        $this->resetter->prepareApplicationForNextRequest($request);
+        $this->resetter->prepareApplicationForNextOperation();
 
         if (Octane::hasRouteFor($request->getMethod(), '/'.$request->path())) {
             return Octane::invokeRoute($request, $request->getMethod(), '/'.$request->path());
         }
 
-        return tap($this->sandbox->make(Kernel::class)->handle($request), function ($response) use ($request) {
+        return tap($this->resetter->kernel->handle($request), function ($response) use ($request) {
             $this->dispatchEvent($this->sandbox, new RequestHandled($this->sandbox, $request, $response));
         });
     }
@@ -43,7 +44,7 @@ class ApplicationGateway
      */
     public function terminate(Request $request, Response $response): void
     {
-        $this->sandbox->make(Kernel::class)->terminate($request, $response);
+        $this->resetter->kernel->terminate($request, $response);
 
         $this->dispatchEvent($this->sandbox, new RequestTerminated($this->app, $this->sandbox, $request, $response));
 

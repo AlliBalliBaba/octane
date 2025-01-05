@@ -40,6 +40,8 @@ class Worker implements WorkerContract
      */
     protected $appSnapshot;
 
+    protected ApplicationResetter $appResetter;
+
     public function __construct(
         protected ApplicationFactory $appFactory,
         protected Client $client
@@ -80,8 +82,9 @@ class Worker implements WorkerContract
         // back to once the request has been handled. This allows us to easily delete
         // certain instances that got resolved / mutated during a previous request.
         $this->createAppSnapshot();
+        $this->appResetter = $this->appResetter ?? new ApplicationResetter($this->appSnapshot);
 
-        $gateway = new ApplicationGateway($this->appSnapshot, $this->app);
+        $gateway = new ApplicationGateway($this->appResetter, $this->appSnapshot, $this->app);
 
         try {
             $responded = false;
@@ -115,9 +118,7 @@ class Worker implements WorkerContract
             // After the request handling process has completed we will unset some variables
             // plus reset the current application state back to its original state before
             // it was cloned. Then we will be ready for the next worker iteration loop.
-            unset($gateway, $sandbox, $request, $response, $octaneResponse, $output);
-
-            CurrentApplication::set($this->app);
+            unset($gateway, $request, $response, $octaneResponse, $output);
         }
     }
 
