@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/octane/compare/v2.5.9...2.x)
+## [Unreleased](https://github.com/laravel/octane/compare/v2.6.0...2.x)
+
+## [v2.6.0](https://github.com/laravel/octane/compare/v2.5.9...v2.6.0) - 2024-11-25
+
+* [2.x] Supports PHP 8.4 for Roadrunner and FrankenPHP by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/octane/pull/964
+* [2.x] Supports PHP 8.4 for `swoole` by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/octane/pull/966
+* FrankenPHP: Allow running Octane without artisan command by [@AlliBalliBaba](https://github.com/AlliBalliBaba) in https://github.com/laravel/octane/pull/968
 
 ## [v2.5.9](https://github.com/laravel/octane/compare/v2.5.8...v2.5.9) - 2024-10-06
 
