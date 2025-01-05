@@ -11,7 +11,7 @@ class ApplicationSnapshot extends Application
     public static function createSnapshotFrom(Application $app): ApplicationSnapshot
     {
         $previousInstance = Container::getInstance();
-        $snapshot = new ApplicationSnapshot;
+        $snapshot = new ApplicationSnapshot();
         foreach (get_object_vars($app) as $key => $value) {
             $snapshot->$key = $value;
         }

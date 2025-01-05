@@ -11,8 +11,6 @@ class FlushStrCacheTest extends TestCase
 {
     public function test_str_is_flushed()
     {
-        Str::flushCache();
-
         [$app, $worker, $client] = $this->createOctaneContext([
             Request::create('/test-str-cache', 'GET'),
             Request::create('/', 'GET'),
@@ -29,6 +27,9 @@ class FlushStrCacheTest extends TestCase
         $reflection = new ReflectionClass(Str::class);
         $property = $reflection->getProperty('snakeCache');
         $property->setAccessible(true);
+
+        // make sure the cache is empty before the request
+        Str::flushCache();
 
         $this->assertEmpty($property->getValue());
 
