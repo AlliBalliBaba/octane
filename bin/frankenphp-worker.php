@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Laravel\Octane\ApplicationFactory;
 use Laravel\Octane\FrankenPhp\FrankenPhpClient;
 use Laravel\Octane\RequestContext;
