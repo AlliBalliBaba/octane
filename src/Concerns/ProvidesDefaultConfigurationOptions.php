@@ -5,23 +5,19 @@ namespace Laravel\Octane\Concerns;
 trait ProvidesDefaultConfigurationOptions
 {
     /**
-     * Get the listeners that will prepare the Laravel application for a new request.
+     * This method is kept for BC reasons.
      */
     public static function prepareApplicationForNextRequest(): array
     {
-        return [
-
-        ];
+        return [];
     }
 
     /**
-     * Get the listeners that will prepare the Laravel application for a new operation.
+     * This method is kept for BC reasons.
      */
     public static function prepareApplicationForNextOperation(): array
     {
-        return [
-
-        ];
+        return [];
     }
 
     /**
