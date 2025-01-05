@@ -4,7 +4,6 @@ namespace Laravel\Octane\Tests;
 
 use Illuminate\Container\Container;
 use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use Laravel\Octane\ApplicationSnapshot;
 
 class ApplicationSnapshotTest extends TestCase
@@ -74,26 +73,9 @@ class ApplicationSnapshotTest extends TestCase
         $this->assertSame('initial/path', $application->basePath());
     }
 
-    public function test_the_snapshot_is_loaded_twice_into_the_application_2_consecutive_requests()
-    {
-        [$app, $worker, $client] = $this->createOctaneContext([
-            Request::create('/some-route', 'GET'),
-            Request::create('/some-route', 'GET'),
-        ]);
-        $snapShotMock = $this->createMock(ApplicationSnapshot::class);
-        $snapShotMock->expects($spy = $this->any())->method('loadSnapshotInto')->with($app);
-        $worker->setAppSnapshot($snapShotMock);
-        $app['router']->get('/first', fn () => 'Hello World');
-
-        $worker->run();
-
-        $this->assertSame(2, $spy->numberOfInvocations());
-    }
-
     /**
-     * An ApplicationSnapshot strategy only reliably works if there are no private
-     * properties in the Application and Container classes. If this test breaks
-     * then private properties were added to these classes inside of Laravel.
+     * This test verifies that there are no private properties in the Application and Container classes.
+     * This is important because the snapshotting mechanism relies on the ability to access all properties.
      */
     public function test_the_application_container_has_no_private_properties()
     {

@@ -33,6 +33,6 @@ class ApplicationSnapshot extends Application
         if (!array_key_exists($abstract, $this->resolved)) {
             return;
         }
-        $callback($this->instances[$abstract]);
+        $callback($this->instances[$abstract] ?? $this->bindings[$abstract]['concrete']());
     }
 }

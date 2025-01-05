@@ -79,6 +79,7 @@ class ApplicationResetter
         $this->flushArrayCache();
         Str::flushCache();
         $this->flushTranslatorCache();
+        $this->forgetViewEngines();
 
         // First-Party Packages...
         $this->prepareInertiaForNextOperation();
@@ -275,6 +276,14 @@ class ApplicationResetter
             }
 
             $socialiteFactory->forgetDrivers();
+        });
+    }
+
+    private function forgetViewEngines(): void
+    {
+        $this->snapshot->resetInitialInstance('view.engine.resolver', function ($resolver) {
+            $resolver->forget('blade');
+            $resolver->forget('php');
         });
     }
 
