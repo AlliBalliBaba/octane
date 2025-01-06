@@ -15,7 +15,7 @@ class ApplicationGateway
 {
     use DispatchesEvents;
 
-    public function __construct(protected ApplicationResetter $resetter, protected Application $app, protected Application $sandbox)
+    public function __construct(protected ApplicationResetter $resetter, protected Application $snapshot, protected Application $sandbox)
     {
     }
 
@@ -26,9 +26,11 @@ class ApplicationGateway
     {
         $request->enableHttpMethodParameterOverride();
 
-        $this->dispatchEvent($this->sandbox, new RequestReceived($this->app, $this->sandbox, $request));
+        // reset all default services
         $this->resetter->prepareApplicationForNextRequest($request);
         $this->resetter->prepareApplicationForNextOperation();
+
+        $this->dispatchEvent($this->sandbox, new RequestReceived($this->snapshot, $this->sandbox, $request));
 
         if (Octane::hasRouteFor($request->getMethod(), '/'.$request->path())) {
             return Octane::invokeRoute($request, $request->getMethod(), '/'.$request->path());
@@ -46,7 +48,7 @@ class ApplicationGateway
     {
         $this->resetter->kernel->terminate($request, $response);
 
-        $this->dispatchEvent($this->sandbox, new RequestTerminated($this->app, $this->sandbox, $request, $response));
+        $this->dispatchEvent($this->sandbox, new RequestTerminated($this->snapshot, $this->sandbox, $request, $response));
 
         $route = $request->route();
 

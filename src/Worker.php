@@ -31,7 +31,7 @@ class Worker implements WorkerContract
      *
      * @var Application
      */
-    protected $app;
+    protected $sandbox;
 
     /**
      * A clone of the warmed up initial application.
@@ -56,7 +56,7 @@ class Worker implements WorkerContract
         // First we will create an instance of the Laravel application that can serve as
         // the base container instance we will clone from on every request. This will
         // also perform the initial bootstrapping that's required by the framework.
-        $this->app = $app = $this->appFactory->createApplication(
+        $this->sandbox = $app = $this->appFactory->createApplication(
             array_merge(
                 $initialInstances,
                 [Client::class => $this->client],
@@ -83,7 +83,7 @@ class Worker implements WorkerContract
         // certain instances that got resolved / mutated during a previous request.
         $this->createAppSnapshot();
 
-        $gateway = new ApplicationGateway($this->appResetter, $this->appSnapshot, $this->app);
+        $gateway = new ApplicationGateway($this->appResetter, $this->appSnapshot, $this->sandbox);
 
         try {
             $responded = false;
@@ -108,11 +108,11 @@ class Worker implements WorkerContract
 
             $responded = true;
 
-            $this->invokeRequestHandledCallbacks($request, $response, $this->app);
+            $this->invokeRequestHandledCallbacks($request, $response, $this->sandbox);
 
             $gateway->terminate($request, $response);
         } catch (Throwable $e) {
-            $this->handleWorkerError($e, $this->app, $request, $context, $responded);
+            $this->handleWorkerError($e, $this->sandbox, $request, $context, $responded);
         } finally {
             // After the request handling process has completed we will unset some variables
             // plus reset the current application state back to its original state before
@@ -138,17 +138,17 @@ class Worker implements WorkerContract
 
         try {
             $this->appResetter->prepareApplicationForNextOperation();
-            $this->dispatchEvent($this->app, new TaskReceived($this->appSnapshot, $this->app, $data));
+            $this->dispatchEvent($this->sandbox, new TaskReceived($this->appSnapshot, $this->sandbox, $data));
 
             $result = $data();
 
-            $this->dispatchEvent($this->app, new TaskTerminated($this->appSnapshot, $this->app, $data, $result));
+            $this->dispatchEvent($this->sandbox, new TaskTerminated($this->appSnapshot, $this->sandbox, $data, $result));
         } catch (Throwable $e) {
-            $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
+            $this->dispatchEvent($this->sandbox, new WorkerErrorOccurred($e, $this->sandbox));
 
             return TaskExceptionResult::from($e);
         } finally {
-            $this->app->flush();
+            $this->sandbox->flush();
         }
 
         return new TaskResult($result);
@@ -163,12 +163,12 @@ class Worker implements WorkerContract
 
         try {
             $this->appResetter->prepareApplicationForNextOperation();
-            $this->dispatchEvent($this->app, new TickReceived($this->appSnapshot, $this->app));
-            $this->dispatchEvent($this->app, new TickTerminated($this->appSnapshot, $this->app));
+            $this->dispatchEvent($this->sandbox, new TickReceived($this->appSnapshot, $this->sandbox));
+            $this->dispatchEvent($this->sandbox, new TickTerminated($this->appSnapshot, $this->sandbox));
         } catch (Throwable $e) {
-            $this->dispatchEvent($this->app, new WorkerErrorOccurred($e, $this->app));
+            $this->dispatchEvent($this->sandbox, new WorkerErrorOccurred($e, $this->sandbox));
         } finally {
-            $this->app->flush();
+            $this->sandbox->flush();
         }
     }
 
@@ -220,11 +220,11 @@ class Worker implements WorkerContract
      */
     public function application(): Application
     {
-        if (! $this->app) {
+        if (! $this->sandbox) {
             throw new RuntimeException('Worker has not booted. Unable to access application.');
         }
 
-        return $this->app;
+        return $this->sandbox;
     }
 
     /**
@@ -232,15 +232,15 @@ class Worker implements WorkerContract
      */
     public function terminate(): void
     {
-        $this->dispatchEvent($this->app, new WorkerStopping($this->app));
+        $this->dispatchEvent($this->sandbox, new WorkerStopping($this->sandbox));
     }
 
     protected function createAppSnapshot(): void
     {
         if (! isset($this->appSnapshot)) {
-            $this->appSnapshot = ApplicationSnapshot::createSnapshotFrom($this->app);
-            $this->appResetter = new ApplicationResetter($this->appSnapshot, $this->app);
+            $this->appSnapshot = ApplicationSnapshot::createSnapshotFrom($this->sandbox);
+            $this->appResetter = new ApplicationResetter($this->appSnapshot, $this->sandbox);
         }
-        $this->appSnapshot->loadSnapshotInto($this->app);
+        $this->appSnapshot->loadSnapshotInto($this->sandbox);
     }
 }

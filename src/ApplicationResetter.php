@@ -34,7 +34,9 @@ class ApplicationResetter
 
     private $octaneHttps;
 
-    private $originalAppLocale;
+    private $initialAppLocale;
+
+    private $initialAppFallbackLocale;
 
     private $logDefaultDriver = null;
 
@@ -47,7 +49,8 @@ class ApplicationResetter
         $this->config = $snapshot['config'];
         $this->url = $snapshot['url'];
         $this->octaneHttps = $this->config->get('octane.https');
-        $this->originalAppLocale = $this->snapshot->getLocale();
+        $this->initialAppLocale = $this->config->get('app.locale');
+        $this->initialAppFallbackLocale = $this->config->get('app.fallback_locale');
         $this->kernel = $this->snapshot->make(Kernel::class);
 
         if ($this->config->get('cache.stores.array')) {
@@ -99,7 +102,7 @@ class ApplicationResetter
     {
         // resetting the locale is an expensive operation
         // only do it if the locale has changed
-        if (Carbon::getLocale() !== $this->originalAppLocale) {
+        if (Carbon::getLocale() !== $this->initialAppLocale) {
             (new CarbonServiceProvider($this->sandbox))->updateLocale();
         }
     }
@@ -238,8 +241,8 @@ class ApplicationResetter
     private function flushTranslatorCache(): void
     {
         $this->snapshot->resetInitialInstance('translator', function ($translator) {
-            $translator->setLocale($this->config->get('app.locale'));
-            $translator->setFallback($this->config->get('app.fallback_locale'));
+            $translator->setLocale($this->initialAppLocale);
+            $translator->setFallback($this->initialAppFallbackLocale);
 
             if ($translator instanceof NamespacedItemResolver) {
                 $translator->flushParsedKeys();
