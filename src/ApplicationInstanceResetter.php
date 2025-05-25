@@ -27,7 +27,7 @@ class ApplicationInstanceResetter
     /**
      * Reset the sandbox instance to the application instance.
      */
-    public function resetInstance()
+    public function resetInstance(): array
     {
         Facade::clearResolvedInstances();
 
@@ -40,11 +40,6 @@ class ApplicationInstanceResetter
         }
 
         return [$snapshot, $this->sandbox];
-    }
-
-    public function getSnapshot(): Application
-    {
-        return $this->snapshot;
     }
 
     private function getNonStaticVars(Application $app): array
