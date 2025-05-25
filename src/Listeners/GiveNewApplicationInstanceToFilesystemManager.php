@@ -11,12 +11,6 @@ class GiveNewApplicationInstanceToFilesystemManager
      */
     public function handle($event): void
     {
-        if (! $event->sandbox->resolved('filesystem')) {
-            return;
-        }
-
-        with($event->sandbox->make('filesystem'), function ($manager) use ($event) {
-            $manager->setApplication($event->sandbox);
-        });
+        //
     }
 }

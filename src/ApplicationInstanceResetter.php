@@ -2,7 +2,6 @@
 
 namespace Laravel\Octane;
 
-use Illuminate\Container\Container;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
 use ReflectionObject;
