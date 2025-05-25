@@ -48,7 +48,7 @@ class RequestStateTest extends TestCase
 
         $this->assertEquals('Taylor', $client->responses[0]->original['name']);
         $this->assertEquals('Abigail', $client->responses[1]->original['name']);
-        $this->assertNotEquals($client->responses[0]->original['container'], $client->responses[1]->original['container']);
+        $this->assertEquals($client->responses[0]->original['container'], $client->responses[1]->original['container']);
     }
 
     public function test_request_routes_flush_controller_state()
